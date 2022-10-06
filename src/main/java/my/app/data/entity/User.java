@@ -1,31 +1,39 @@
 package my.app.data.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
-import javax.persistence.Column;
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.Lob;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.Type;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import my.app.data.Role;
 
 @Entity
 @Table(name = "application_user")
 public class User extends AbstractEntity {
 
+    @Nonnull
     private String username;
+    @Nonnull
     private String name;
     @JsonIgnore
     private String hashedPassword;
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER)
+    @Nonnull
     private Set<Role> roles;
-    @Lob
-    @Column(length = 1000000)
-    private byte[] profilePicture;
+    @Nonnull
+    @Type(type = "uuid-char")
+    private UUID profilePictureId;
 
     public String getUsername() {
         return username;
@@ -51,11 +59,12 @@ public class User extends AbstractEntity {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
-    public byte[] getProfilePicture() {
-        return profilePicture;
-    }
-    public void setProfilePicture(byte[] profilePicture) {
-        this.profilePicture = profilePicture;
+
+    public UUID getProfilePictureId() {
+        return profilePictureId;
     }
 
+    public void setProfilePictureId(UUID profilePictureId) {
+        this.profilePictureId = profilePictureId;
+    }
 }
