@@ -1,6 +1,5 @@
 package my.app.views.masterdetailperson;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -42,7 +41,7 @@ public class MasterDetailPersonView extends Div implements BeforeEnterObserver {
     private final String SAMPLEPERSON_ID = "samplePersonID";
     private final String SAMPLEPERSON_EDIT_ROUTE_TEMPLATE = "master-detail-person/%s/edit";
 
-    private Grid<SamplePerson> grid = new Grid<>(SamplePerson.class, false);
+    private final Grid<SamplePerson> grid = new Grid<>(SamplePerson.class, false);
 
     private TextField firstName;
     private TextField lastName;
@@ -52,10 +51,10 @@ public class MasterDetailPersonView extends Div implements BeforeEnterObserver {
     private TextField occupation;
     private Checkbox important;
 
-    private Button cancel = new Button("Cancel");
-    private Button save = new Button("Save");
+    private final Button cancel = new Button("Cancel");
+    private final Button save = new Button("Save");
 
-    private BeanValidationBinder<SamplePerson> binder;
+    private final BeanValidationBinder<SamplePerson> binder;
 
     private SamplePerson samplePerson;
 
@@ -170,9 +169,8 @@ public class MasterDetailPersonView extends Div implements BeforeEnterObserver {
         dateOfBirth = new DatePicker("Date Of Birth");
         occupation = new TextField("Occupation");
         important = new Checkbox("Important");
-        Component[] fields = new Component[]{firstName, lastName, email, phone, dateOfBirth, occupation, important};
+        formLayout.add(firstName, lastName, email, phone, dateOfBirth, occupation, important);
 
-        formLayout.add(fields);
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);
 
@@ -197,7 +195,7 @@ public class MasterDetailPersonView extends Div implements BeforeEnterObserver {
 
     private void refreshGrid() {
         grid.select(null);
-        grid.getLazyDataView().refreshAll();
+        grid.getDataProvider().refreshAll();
     }
 
     private void clearForm() {

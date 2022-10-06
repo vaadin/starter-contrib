@@ -1,6 +1,5 @@
 package my.app.views.masterdetailbook;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -46,7 +45,7 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
     private final String SAMPLEBOOK_ID = "sampleBookID";
     private final String SAMPLEBOOK_EDIT_ROUTE_TEMPLATE = "master-detail-book/%s/edit";
 
-    private Grid<SampleBook> grid = new Grid<>(SampleBook.class, false);
+    private final Grid<SampleBook> grid = new Grid<>(SampleBook.class, false);
 
     private Upload image;
     private Image imagePreview;
@@ -56,10 +55,10 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
     private TextField pages;
     private TextField isbn;
 
-    private Button cancel = new Button("Cancel");
-    private Button save = new Button("Save");
+    private final Button cancel = new Button("Cancel");
+    private final Button save = new Button("Save");
 
-    private BeanValidationBinder<SampleBook> binder;
+    private final BeanValidationBinder<SampleBook> binder;
 
     private SampleBook sampleBook;
 
@@ -180,9 +179,8 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
         publicationDate = new DatePicker("Publication Date");
         pages = new TextField("Pages");
         isbn = new TextField("Isbn");
-        Component[] fields = new Component[]{imageLabel, image, name, author, publicationDate, pages, isbn};
+        formLayout.add(imageLabel, image, name, author, publicationDate, pages, isbn);
 
-        formLayout.add(fields);
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);
 
@@ -227,7 +225,7 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
 
     private void refreshGrid() {
         grid.select(null);
-        grid.getLazyDataView().refreshAll();
+        grid.getDataProvider().refreshAll();
     }
 
     private void clearForm() {
