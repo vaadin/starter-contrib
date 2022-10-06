@@ -1,5 +1,13 @@
 package my.app.views.masterdetailbook;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -26,16 +34,11 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Base64;
-import java.util.Optional;
-import java.util.UUID;
+
+import my.app.data.entity.ImageData;
 import my.app.data.entity.SampleBook;
 import my.app.data.service.SampleBookService;
 import my.app.views.MainLayout;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 
 @PageTitle("Master Detail Book")
 @Route(value = "master-detail-book/:sampleBookID?/:action?(edit)", layout = MainLayout.class)
@@ -63,6 +66,7 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
     private SampleBook sampleBook;
 
     private final SampleBookService sampleBookService;
+    private ImageData sampleBookImage;
 
     @Autowired
     public MasterDetailBookView(SampleBookService sampleBookService) {
@@ -80,8 +84,8 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
         // Configure Grid
         LitRenderer<SampleBook> imageRenderer = LitRenderer
                 .<SampleBook>of("<img style='height: 64px' src=${item.image} />").withProperty("image", item -> {
-                    if (item != null && item.getImage() != null) {
-                        return "data:image;base64," + Base64.getEncoder().encodeToString(item.getImage());
+                    if (item != null && item.getImageId() != null) {
+                        return sampleBookService.getImageUrl(item);
                     } else {
                         return "";
                     }
@@ -129,7 +133,7 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
                     this.sampleBook = new SampleBook();
                 }
                 binder.writeBean(this.sampleBook);
-                sampleBookService.update(this.sampleBook);
+                sampleBookService.update(this.sampleBook, this.sampleBookImage);
                 clearForm();
                 refreshGrid();
                 Notification.show("SampleBook details stored.");
@@ -218,7 +222,7 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
             if (this.sampleBook == null) {
                 this.sampleBook = new SampleBook();
             }
-            this.sampleBook.setImage(uploadBuffer.toByteArray());
+            this.sampleBookImage = new ImageData(uploadBuffer.toByteArray());
         });
         preview.setVisible(false);
     }
@@ -236,11 +240,12 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
         this.sampleBook = value;
         binder.readBean(this.sampleBook);
         this.imagePreview.setVisible(value != null);
-        if (value == null || value.getImage() == null) {
+        sampleBookImage = null;
+        if (value == null || value.getImageId() == null) {
             this.image.clearFileList();
             this.imagePreview.setSrc("");
         } else {
-            this.imagePreview.setSrc("data:image;base64," + Base64.getEncoder().encodeToString(value.getImage()));
+            this.imagePreview.setSrc(sampleBookService.getImageUrl(sampleBook));
         }
 
     }

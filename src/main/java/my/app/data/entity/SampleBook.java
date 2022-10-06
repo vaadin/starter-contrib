@@ -1,27 +1,34 @@
 package my.app.data.entity;
 
 import java.time.LocalDate;
-import javax.persistence.Column;
+import java.util.UUID;
+
+import javax.annotation.Nonnull;
 import javax.persistence.Entity;
-import javax.persistence.Lob;
+
+import org.hibernate.annotations.Type;
 
 @Entity
 public class SampleBook extends AbstractEntity {
 
-    @Lob
-    @Column(length = 1000000)
-    private byte[] image;
+    @Nonnull
     private String name;
+    @Nonnull
     private String author;
     private LocalDate publicationDate;
+    @Nonnull
     private Integer pages;
+    @Nonnull
     private String isbn;
+    @Type(type = "uuid-char")
+    private UUID imageId;
 
-    public byte[] getImage() {
-        return image;
+    public UUID getImageId() {
+        return imageId;
     }
-    public void setImage(byte[] image) {
-        this.image = image;
+
+    public void setImage(UUID imageId) {
+        this.imageId = imageId;
     }
     public String getName() {
         return name;
