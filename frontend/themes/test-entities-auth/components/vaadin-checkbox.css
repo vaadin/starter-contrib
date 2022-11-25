@@ -1,0 +1,13 @@
+[part="checkbox"] {
+  background-color: var(--lumo-base-color);
+  box-shadow: inset 0 0 0 1px var(--lumo-contrast-30pct);
+}
+
+:host(:not([checked]):not([indeterminate]):not([disabled]):hover) [part="checkbox"] {
+  background-color: var(--lumo-base-color);
+  transition: 0.2s;
+}
+
+:host(:not([focus-ring]):hover) [part="checkbox"] {
+  box-shadow: inset 0 0 0 1px var(--lumo-contrast-50pct);
+}
