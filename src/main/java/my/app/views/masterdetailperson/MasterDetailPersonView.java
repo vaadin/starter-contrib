@@ -1,6 +1,7 @@
 package my.app.views.masterdetailperson;
 
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -9,202 +10,208 @@ import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.flow.data.renderer.LitRenderer;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import java.util.Optional;
-import java.util.UUID;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import my.app.data.entity.SamplePerson;
 import my.app.data.service.SamplePersonService;
 import my.app.views.MainLayout;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
+import java.util.Optional;
 
 @PageTitle("Master Detail Person")
-@Route(value = "master-detail-person/:samplePersonID?/:action?(edit)", layout = MainLayout.class)
+@Route(value = "master-detail-person", layout = MainLayout.class)
 @AnonymousAllowed
 @Uses(Icon.class)
-public class MasterDetailPersonView extends Div implements BeforeEnterObserver {
+public class MasterDetailView extends SplitLayout implements HasUrlParameter<Long> {
 
-    private final String SAMPLEPERSON_ID = "samplePersonID";
-    private final String SAMPLEPERSON_EDIT_ROUTE_TEMPLATE = "master-detail-person/%s/edit";
 
     private final Grid<SamplePerson> grid = new Grid<>(SamplePerson.class, false);
 
-    private TextField firstName;
-    private TextField lastName;
-    private TextField email;
-    private TextField phone;
-    private DatePicker dateOfBirth;
-    private TextField occupation;
-    private Checkbox important;
+    private TextField firstName = new TextField("First Name");
+    private TextField lastName = new TextField("Last Name");
+    private TextField email = new TextField("Email");
+    private TextField phone = new TextField("Phone");
+    private DatePicker dateOfBirth = new DatePicker("Date Of Birth");
+    private TextField occupation = new TextField("Occupation");
+    private TextField role = new TextField("Role");
+    private Checkbox important = new Checkbox("Important");;
 
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
 
     private final BeanValidationBinder<SamplePerson> binder;
 
-    private SamplePerson samplePerson;
+    private final SamplePersonService service;
 
-    private final SamplePersonService samplePersonService;
+    public MasterDetailView(SamplePersonService samplePersonService) {
+        this.service = samplePersonService;
+        buildView();
 
-    @Autowired
-    public MasterDetailPersonView(SamplePersonService samplePersonService) {
-        this.samplePersonService = samplePersonService;
-        addClassNames("master-detail-person-view");
+        // Connect Grid to the backend
+        listPersonsInGrid();
 
-        // Create UI
-        SplitLayout splitLayout = new SplitLayout();
+        // Configure form binding
+        binder = new BeanValidationBinder<>(SamplePerson.class);
+        binder.bindInstanceFields(this);
 
-        createGridLayout(splitLayout);
-        createEditorLayout(splitLayout);
+        addListeners();
 
-        add(splitLayout);
+    }
 
-        // Configure Grid
-        grid.addColumn("firstName").setAutoWidth(true);
-        grid.addColumn("lastName").setAutoWidth(true);
-        grid.addColumn("email").setAutoWidth(true);
-        grid.addColumn("phone").setAutoWidth(true);
-        grid.addColumn("dateOfBirth").setAutoWidth(true);
-        grid.addColumn("occupation").setAutoWidth(true);
-        LitRenderer<SamplePerson> importantRenderer = LitRenderer.<SamplePerson>of(
-                "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
-                .withProperty("icon", important -> important.isImportant() ? "check" : "minus").withProperty("color",
-                        important -> important.isImportant()
-                                ? "var(--lumo-primary-text-color)"
-                                : "var(--lumo-disabled-text-color)");
-
-        grid.addColumn(importantRenderer).setHeader("Important").setAutoWidth(true);
-
-        grid.setItems(query -> samplePersonService.list(
-                PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
-                .stream());
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
-
-        // when a row is selected or deselected, populate form
+    private void addListeners() {
         grid.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                UI.getCurrent().navigate(String.format(SAMPLEPERSON_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+            var selectedPerson = event.getValue();
+            if(selectedPerson == null) {
+                prepareFormForNewPerson();
             } else {
-                clearForm();
-                UI.getCurrent().navigate(MasterDetailPersonView.class);
+                editPerson(selectedPerson);
             }
         });
 
-        // Configure Form
-        binder = new BeanValidationBinder<>(SamplePerson.class);
-
-        // Bind fields. This is where you'd define e.g. validation rules
-
-        binder.bindInstanceFields(this);
-
         cancel.addClickListener(e -> {
-            clearForm();
-            refreshGrid();
+            prepareFormForNewPerson();
+            listPersonsInGrid();
         });
 
         save.addClickListener(e -> {
             try {
-                if (this.samplePerson == null) {
-                    this.samplePerson = new SamplePerson();
-                }
-                binder.writeBean(this.samplePerson);
-                samplePersonService.update(this.samplePerson);
-                clearForm();
-                refreshGrid();
-                Notification.show("SamplePerson details stored.");
-                UI.getCurrent().navigate(MasterDetailPersonView.class);
-            } catch (ValidationException validationException) {
-                Notification.show("An exception happened while trying to store the samplePerson details.");
+                service.update(binder.getBean());
+                prepareFormForNewPerson();
+                listPersonsInGrid();
+                Notification.show("Data updated");
+            } catch (ObjectOptimisticLockingFailureException exception) {
+                showErrorMessage("Error updating the data. Somebody else has updated the record while you were making changes.");
             }
         });
-
+        save.addClickShortcut(Key.ENTER);
     }
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        Optional<UUID> samplePersonId = event.getRouteParameters().get(SAMPLEPERSON_ID).map(UUID::fromString);
-        if (samplePersonId.isPresent()) {
-            Optional<SamplePerson> samplePersonFromBackend = samplePersonService.get(samplePersonId.get());
-            if (samplePersonFromBackend.isPresent()) {
-                populateForm(samplePersonFromBackend.get());
-            } else {
-                Notification.show(
-                        String.format("The requested samplePerson was not found, ID = %s", samplePersonId.get()), 3000,
-                        Notification.Position.BOTTOM_START);
-                // when a row is selected but the data is no longer available,
-                // refresh grid
-                refreshGrid();
-                event.forwardTo(MasterDetailPersonView.class);
-            }
-        }
+    private void showErrorMessage(String errorMessage) {
+        Notification n = Notification.show(errorMessage);
+        n.setPosition(Notification.Position.MIDDLE);
+        n.addThemeVariants(NotificationVariant.LUMO_ERROR);
     }
 
-    private void createEditorLayout(SplitLayout splitLayout) {
-        Div editorLayoutDiv = new Div();
-        editorLayoutDiv.setClassName("editor-layout");
+    private void buildView() {
+        setOrientation(Orientation.HORIZONTAL);
+        setSizeFull();
 
-        Div editorDiv = new Div();
-        editorDiv.setClassName("editor");
-        editorLayoutDiv.add(editorDiv);
+        var formLayout = new FormLayout(firstName, lastName, email, phone, dateOfBirth, occupation, role, important);
+        formLayout.setClassName("editor");
 
-        FormLayout formLayout = new FormLayout();
-        firstName = new TextField("First Name");
-        lastName = new TextField("Last Name");
-        email = new TextField("Email");
-        phone = new TextField("Phone");
-        dateOfBirth = new DatePicker("Date Of Birth");
-        occupation = new TextField("Occupation");
-        important = new Checkbox("Important");
-        formLayout.add(firstName, lastName, email, phone, dateOfBirth, occupation, important);
-
-        editorDiv.add(formLayout);
-        createButtonLayout(editorLayoutDiv);
-
-        splitLayout.addToSecondary(editorLayoutDiv);
-    }
-
-    private void createButtonLayout(Div editorLayoutDiv) {
-        HorizontalLayout buttonLayout = new HorizontalLayout();
+        var buttonLayout = new HorizontalLayout(save, cancel);
         buttonLayout.setClassName("button-layout");
         cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        buttonLayout.add(save, cancel);
-        editorLayoutDiv.add(buttonLayout);
+
+        var editorLayout = new VerticalLayout();
+        editorLayout.setWidth("400px");
+        editorLayout.setPadding(false);
+        editorLayout.setSpacing(false);
+        editorLayout.addAndExpand(formLayout);
+        editorLayout.add(buttonLayout);
+
+        addToSecondary(editorLayout);
+        addToPrimary(grid);
+
+        // Configure Grid
+        grid.setColumns("firstName","lastName" ,"email");
+        grid.addComponentColumn(p ->
+                        p.isImportant() ? checkedIcon() : uncheckedIcon())
+                .setHeader("Important")
+                .setKey("important") // sorting falls back to "important" field in DTO
+                .setSortable(true);
+        grid.getColumns().forEach(c -> {
+            c.setAutoWidth(true);
+        });
+        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+        grid.setSizeFull();
+
     }
 
-    private void createGridLayout(SplitLayout splitLayout) {
-        Div wrapper = new Div();
-        wrapper.setClassName("grid-wrapper");
-        splitLayout.addToPrimary(wrapper);
-        wrapper.add(grid);
+    private void editPerson(SamplePerson person) {
+        binder.setBean(person);
+        updateRouteParameters();
     }
 
-    private void refreshGrid() {
-        grid.select(null);
-        grid.getDataProvider().refreshAll();
+    private void listPersonsInGrid() {
+        grid.setItems(query -> service.list(
+                        PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+                .stream());
     }
 
-    private void clearForm() {
-        populateForm(null);
+    private void prepareFormForNewPerson() {
+        editPerson(new SamplePerson());
     }
 
-    private void populateForm(SamplePerson value) {
-        this.samplePerson = value;
-        binder.readBean(this.samplePerson);
-
+    /**
+     * Updates deep linkin parameters.
+     */
+    private void updateRouteParameters() {
+        if(isAttached()) {
+            String deepLinkingUrl = RouteConfiguration.forSessionScope().getUrl(getClass(), binder.getBean().getId());
+            getUI().get().getPage().getHistory()
+                    .replaceState(null, deepLinkingUrl);
+        }
     }
+
+    /**
+     * Called by the framework when entering the page.
+     * Decodes possible deep linking parameters from the URL.
+     *
+     * @param event
+     *            the navigation event that caused the call to this method
+     * @param samplePersonId
+     *            the optional person id coming in as URL parameter
+     */
+    @Override
+    public void setParameter(BeforeEvent event, @OptionalParameter Long samplePersonId) {
+        /*
+         * When entering the view, check if there is an
+         * if an existing person should be selected for
+         * editing based on the current URL
+         */
+        if (samplePersonId != null) {
+            Optional<SamplePerson> samplePersonFromBackend = service.get(samplePersonId);
+            if (samplePersonFromBackend.isPresent()) {
+                editPerson(samplePersonFromBackend.get());
+            } else {
+                showErrorMessage("The requested samplePerson was not found, ID = %s");
+                prepareFormForNewPerson();
+            }
+        } else {
+            prepareFormForNewPerson();
+        }
+    }
+
+    private static Component uncheckedIcon() {
+        Icon icon = VaadinIcon.MINUS.create();
+        icon.addClassNames(LumoUtility.TextColor.DISABLED, LumoUtility.IconSize.SMALL);
+        return icon;
+    }
+
+    private static Component checkedIcon() {
+        Icon icon = VaadinIcon.CHECK.create();
+        icon.addClassNames(LumoUtility.TextColor.PRIMARY, LumoUtility.IconSize.SMALL);
+        return icon;
+    }
+
 }
