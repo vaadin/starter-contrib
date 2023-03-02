@@ -1,0 +1,6 @@
+@import "common-input-field.css";
+
+:host(:hover:not([readonly]):not([focused]):not([invalid])) [part='input-field'] {
+    background-color: var(--lumo-base-color);
+    box-shadow: inset 0 0 0 1px var(--lumo-contrast-50pct);
+}
