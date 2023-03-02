@@ -11,6 +11,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -30,12 +32,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 import java.util.Optional;
-import java.util.UUID;
 import my.app.data.entity.SampleBook;
 import my.app.data.service.SampleBookService;
 import my.app.views.MainLayout;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 @PageTitle("Master Detail Book")
 @Route(value = "master-detail-book/:sampleBookID?/:action?(edit)", layout = MainLayout.class)
@@ -64,7 +65,6 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
 
     private final SampleBookService sampleBookService;
 
-    @Autowired
     public MasterDetailBookView(SampleBookService sampleBookService) {
         this.sampleBookService = sampleBookService;
         addClassNames("master-detail-book-view");
@@ -132,18 +132,22 @@ public class MasterDetailBookView extends Div implements BeforeEnterObserver {
                 sampleBookService.update(this.sampleBook);
                 clearForm();
                 refreshGrid();
-                Notification.show("SampleBook details stored.");
+                Notification.show("Data updated");
                 UI.getCurrent().navigate(MasterDetailBookView.class);
+            } catch (ObjectOptimisticLockingFailureException exception) {
+                Notification n = Notification.show(
+                        "Error updating the data. Somebody else has updated the record while you were making changes.");
+                n.setPosition(Position.MIDDLE);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
             } catch (ValidationException validationException) {
-                Notification.show("An exception happened while trying to store the sampleBook details.");
+                Notification.show("Failed to update the data. Check again that all values are valid");
             }
         });
-
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        Optional<UUID> sampleBookId = event.getRouteParameters().get(SAMPLEBOOK_ID).map(UUID::fromString);
+        Optional<Long> sampleBookId = event.getRouteParameters().get(SAMPLEBOOK_ID).map(Long::parseLong);
         if (sampleBookId.isPresent()) {
             Optional<SampleBook> sampleBookFromBackend = sampleBookService.get(sampleBookId.get());
             if (sampleBookFromBackend.isPresent()) {

@@ -1,9 +1,12 @@
 package my.app.data.service;
 
-import java.util.UUID;
 import my.app.data.entity.SamplePerson;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface SamplePersonRepository extends JpaRepository<SamplePerson, UUID> {
+public interface SamplePersonRepository
+        extends
+            JpaRepository<SamplePerson, Long>,
+            JpaSpecificationExecutor<SamplePerson> {
 
 }

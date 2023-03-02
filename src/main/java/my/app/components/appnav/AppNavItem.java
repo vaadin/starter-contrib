@@ -4,7 +4,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.internal.StateTree;
 import com.vaadin.flow.router.RouteConfiguration;
@@ -69,7 +68,7 @@ public class AppNavItem extends Component {
      * @param icon
      *            the icon for the item
      */
-    public AppNavItem(String label, String path, Icon icon) {
+    public AppNavItem(String label, String path, Component icon) {
         setPath(path);
         setLabel(label);
         setIcon(icon);
@@ -85,7 +84,7 @@ public class AppNavItem extends Component {
      * @param icon
      *            the icon for the item
      */
-    public AppNavItem(String label, Class<? extends Component> view, Icon icon) {
+    public AppNavItem(String label, Class<? extends Component> view, Component icon) {
         setPath(view);
         setLabel(label);
         setIcon(icon);
@@ -295,4 +294,20 @@ public class AppNavItem extends Component {
         setIcon(icon);
         return this;
     }
+
+    /**
+     * Sets the expanded status of the item.
+     *
+     * @param value
+     *            true to expand the item, false to collapse it
+     */
+    public AppNavItem setExpanded(boolean value) {
+        if (value) {
+            getElement().setAttribute("expanded", "");
+        } else {
+            getElement().removeAttribute("expanded");
+        }
+        return this;
+    }
+
 }

@@ -1,31 +1,40 @@
 package my.app.data.entity;
 
-import java.util.UUID;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import org.hibernate.annotations.Type;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Version;
 
 @MappedSuperclass
 public abstract class AbstractEntity {
 
     @Id
-    @GeneratedValue
-    @Type(type = "uuid-char")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idgenerator")
+    // The initial value is to account for data.sql demo data ids
+    @SequenceGenerator(name = "idgenerator", initialValue = 1000)
+    private Long id;
 
-    public UUID getId() {
+    @Version
+    private int version;
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Long id) {
         this.id = id;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     @Override
     public int hashCode() {
-        if (id != null) {
-            return id.hashCode();
+        if (getId() != null) {
+            return getId().hashCode();
         }
         return super.hashCode();
     }
@@ -37,8 +46,8 @@ public abstract class AbstractEntity {
         }
         AbstractEntity other = (AbstractEntity) obj;
 
-        if (id != null) {
-            return id.equals(other.id);
+        if (getId() != null) {
+            return getId().equals(other.getId());
         }
         return super.equals(other);
     }

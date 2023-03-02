@@ -2,16 +2,19 @@ package my.app.data.entity;
 
 import java.time.LocalDate;
 import javax.persistence.Entity;
+import javax.validation.constraints.Email;
 
 @Entity
 public class SamplePerson extends AbstractEntity {
 
     private String firstName;
     private String lastName;
+    @Email
     private String email;
     private String phone;
     private LocalDate dateOfBirth;
     private String occupation;
+    private String role;
     private boolean important;
 
     public String getFirstName() {
@@ -49,6 +52,12 @@ public class SamplePerson extends AbstractEntity {
     }
     public void setOccupation(String occupation) {
         this.occupation = occupation;
+    }
+    public String getRole() {
+        return role;
+    }
+    public void setRole(String role) {
+        this.role = role;
     }
     public boolean isImportant() {
         return important;
