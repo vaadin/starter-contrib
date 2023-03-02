@@ -1,9 +1,9 @@
 package my.app.data.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import java.time.LocalDate;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
 
 @Entity
 public class SampleBook extends AbstractEntity {
