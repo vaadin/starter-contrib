@@ -91,42 +91,6 @@ public class AppNavItem extends Component {
     }
 
     /**
-     * Creates a new menu item using the given label and icon that links to the
-     * given path.
-     * 
-     * @param label
-     *            the label for the item
-     * @param path
-     *            the path to link to
-     * @param iconClass
-     *            the CSS class to use for showing the icon
-     */
-    public AppNavItem(String label, String path, String iconClass) {
-        setPath(path);
-        setLabel(label);
-
-        setIconClass(iconClass);
-    }
-
-    /**
-     * Creates a new menu item using the given label and icon that links to the
-     * given path.
-     * 
-     * @param label
-     *            the label for the item
-     * @param view
-     *            the view to link to
-     * @param iconClass
-     *            the CSS class to use for showing the icon
-     */
-    public AppNavItem(String label, Class<? extends Component> view, String iconClass) {
-        setPath(view);
-        setLabel(label);
-
-        setIconClass(iconClass);
-    }
-
-    /**
      * Adds menu item(s) inside this item, creating a hierarchy.
      * 
      * @param appNavItems
@@ -276,22 +240,6 @@ public class AppNavItem extends Component {
         } else {
             getElement().appendChild(icon.getElement());
         }
-        return this;
-    }
-
-    /**
-     * Sets the icon using a CSS class for the item.
-     * <p>
-     * Can also be used to set a custom component to be shown in front of the label.
-     * 
-     * @param iconClass
-     *            the CSS class to use for showing the icon
-     * @return this instance for chaining
-     */
-    public AppNavItem setIconClass(String iconClass) {
-        Span icon = new Span();
-        icon.setClassName(iconClass);
-        setIcon(icon);
         return this;
     }
 

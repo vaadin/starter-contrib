@@ -19,6 +19,9 @@ import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
+
+import org.vaadin.lineawesome.LineAwesomeIcon;
+
 import my.app.components.appnav.AppNav;
 import my.app.components.appnav.AppNavItem;
 import my.app.data.entity.User;
@@ -75,27 +78,27 @@ public class MainLayout extends AppLayout {
         AppNav nav = new AppNav();
 
         if (accessChecker.hasAccess(PublicviewView.class)) {
-            nav.addItem(new AppNavItem("Public view", PublicviewView.class, "la la-lock-open"));
+            nav.addItem(new AppNavItem("Public view", PublicviewView.class, LineAwesomeIcon.LOCK_OPEN_SOLID.create()));
 
         }
         if (accessChecker.hasAccess(LoggedInView.class)) {
-            nav.addItem(new AppNavItem("Logged In", LoggedInView.class, "la la-globe"));
+            nav.addItem(new AppNavItem("Logged In", LoggedInView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         }
         if (accessChecker.hasAccess(UserroleonlyView.class)) {
-            nav.addItem(new AppNavItem("'User' role only", UserroleonlyView.class, "la la-globe"));
+            nav.addItem(new AppNavItem("'User' role only", UserroleonlyView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         }
         if (accessChecker.hasAccess(AdminroleonlyView.class)) {
-            nav.addItem(new AppNavItem("'Admin' role only", AdminroleonlyView.class, "la la-globe"));
+            nav.addItem(new AppNavItem("'Admin' role only", AdminroleonlyView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         }
         if (accessChecker.hasAccess(MasterDetailPersonView.class)) {
-            nav.addItem(new AppNavItem("Master Detail Person", MasterDetailPersonView.class, "la la-columns"));
+            nav.addItem(new AppNavItem("Master Detail Person", MasterDetailPersonView.class, LineAwesomeIcon.COLUMNS_SOLID.create()));
 
         }
         if (accessChecker.hasAccess(MasterDetailBookView.class)) {
-            nav.addItem(new AppNavItem("Master Detail Book", MasterDetailBookView.class, "la la-columns"));
+            nav.addItem(new AppNavItem("Master Detail Book", MasterDetailBookView.class, LineAwesomeIcon.COLUMNS_SOLID.create()));
 
         }
 
